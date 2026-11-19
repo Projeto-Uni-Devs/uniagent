@@ -1,0 +1,514 @@
+/* agent — SKIN. Visual only, and only var(--uni-*): the theme is injected by
+   the uni server before this file loads. Zero color of our own. */
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100dvh; margin: 0; }
+body {
+  display: flex;
+  flex-direction: column;
+  background: var(--uni-panel);
+  color: var(--uni-ink);
+  font: 16px/1.55 var(--uni-font-mono);
+  -webkit-font-smoothing: antialiased;
+  /* Android's WebView inflates text on its own (autosizing) — focus on
+     sub-16px text zooms the whole page, which broke the bar in portrait. */
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+}
+* { -webkit-tap-highlight-color: transparent; }
+::selection { background: var(--uni-dim-soft); color: var(--uni-ink); }
+:focus-visible { outline: 2px solid var(--uni-ink); outline-offset: 2px; border-radius: 3px; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+
+/* ---------- Header strip ---------- */
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: var(--uni-space-4) var(--uni-gutter, 20px) var(--uni-space-3);
+  border-bottom: 1px solid color-mix(in oklab, var(--uni-rule) 70%, transparent);
+  flex: none;
+}
+.head h1 {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.head .state {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  font-size: 11.5px;
+  letter-spacing: 0.03em;
+  color: var(--uni-dim);
+}
+.head .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--uni-rule);
+}
+
+/* ---------- Transcript ---------- */
+.log {
+  flex: 1;
+  /* Inside a flex column, a scrollable child needs min-height: 0 to be
+     allowed to shrink — the prompt bar must never be pushed off-screen. */
+  min-height: 0;
+  position: relative;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--uni-rule) transparent;
+}
+.log::-webkit-scrollbar { width: 8px; }
+.log::-webkit-scrollbar-thumb { background: var(--uni-rule); border-radius: 4px; }
+.turns {
+  max-width: 72ch;
+  margin: 0 auto;
+  padding: var(--uni-space-3) var(--uni-gutter, 20px) var(--uni-space-5);
+}
+/* One grammar for every turn: a rule carries it, the label says who speaks.
+   The lamp is amber only on the agent — lit state, the Board's single accent. */
+.turn { padding: 14px 0 4px; }
+.turn + .turn { border-top: 1px solid color-mix(in oklab, var(--uni-rule) 70%, transparent); }
+.turn .who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--uni-dim);
+}
+.turn[data-role="agent"] .who { color: var(--uni-lamp); }
+.turn[data-role="agent"] .who .lamp {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--uni-lamp);
+}
+.turn[data-role="agent"] .who span:last-child { color: var(--uni-ink); }
+.turn .text {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.turn[data-role="agent"] .text { color: var(--uni-dim); }
+.turn .files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: var(--uni-space-2);
+}
+.turn .files code {
+  font-size: 12px;
+  color: var(--uni-ink);
+  background: var(--uni-module);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+/* Empty state: the state is the content. Centered in the free area. */
+.empty {
+  height: 100%;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  max-width: 72ch;
+  margin: 0 auto;
+  padding: 0 var(--uni-gutter, 20px);
+}
+.empty .tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--uni-dim);
+}
+.empty .tag::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: color-mix(in oklab, var(--uni-rule) 80%, transparent);
+}
+.empty p {
+  margin: var(--uni-space-2) 0 0;
+  color: var(--uni-dim);
+  font-size: 12.5px;
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+.empty strong { color: var(--uni-ink); font-weight: 600; }
+
+/* ---------- Prompt bar ---------- */
+.bar-zone {
+  flex: none;
+  position: relative;
+  padding: var(--uni-space-2) var(--uni-gutter, 20px)
+    calc(14px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to top, var(--uni-panel) 72%, transparent);
+}
+.prompt {
+  position: relative;
+  max-width: 72ch;
+  margin: 0 auto;
+}
+.prompt .shell {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 8px 8px 8px 14px;
+  background: var(--uni-module);
+  border: 1px solid var(--uni-rule);
+  border-radius: var(--uni-radius);
+  transition: border-color 140ms linear;
+}
+.prompt.is-focused .shell { border-color: var(--uni-module-hi); }
+.prompt textarea {
+  flex: 1;
+  min-height: 24px;
+  max-height: 110px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--uni-ink);
+  font: inherit;
+  line-height: 1.55;
+  resize: none;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--uni-rule) transparent;
+  caret-color: var(--uni-ink);
+  /* Focus on sub-16px text makes the browser zoom the page — the bar half
+     left the screen in portrait. 16px is the floor the zoom respects. */
+  font-size: 16px;
+}
+.prompt textarea::placeholder { color: var(--uni-dim); }
+.prompt textarea:focus { outline: none; }
+.prompt .cluster {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+  padding-bottom: 1px;
+}
+.prompt .key {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--uni-radius);
+  color: var(--uni-dim);
+}
+.prompt .key:hover { color: var(--uni-ink); }
+.prompt .key:active { background: var(--uni-module-hi); }
+.prompt .send {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--uni-radius);
+  color: var(--uni-rule);
+  /* No amber here: sending is not a lit state. Ink when there is something. */
+  transition: color 140ms linear, transform 110ms linear;
+}
+.prompt.is-armed .send { color: var(--uni-ink); }
+.prompt .send:active { transform: scale(0.94); background: var(--uni-module-hi); }
+.prompt .glyph { position: relative; width: 18px; height: 18px; }
+.prompt .glyph svg {
+  position: absolute;
+  inset: 0;
+  transition: opacity 180ms cubic-bezier(0.22, 1, 0.36, 1), transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.prompt .glyph .g-stop { opacity: 0; transform: scale(0.6); }
+.prompt.is-busy .glyph .g-send { opacity: 0; transform: scale(0.6); }
+.prompt.is-busy .glyph .g-stop { opacity: 1; transform: scale(1); }
+.prompt .chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 4px var(--uni-space-2);
+}
+.prompt .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--uni-ink);
+  background: var(--uni-module);
+  border: 1px solid var(--uni-rule);
+  padding: 2px 4px 2px 8px;
+  border-radius: 3px;
+}
+.prompt .chip button {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  color: var(--uni-dim);
+}
+.prompt .chip button:hover { color: var(--uni-ink); }
+
+/* ---------- Jump: fixed above the prompt ---------- */
+.jump {
+  position: absolute;
+  top: -22px;
+  right: calc(var(--uni-gutter, 20px) + 8px);
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--uni-panel-deep);
+  border: 1px solid var(--uni-rule);
+  color: var(--uni-ink);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 12px 24px -16px rgba(0, 0, 0, 0.9);
+  transform: translateY(10px) scale(0.9);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform var(--dropdown-open-dur) var(--dropdown-ease),
+    opacity var(--dropdown-open-dur) var(--dropdown-ease);
+}
+.jump.is-shown {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+.jump:active {
+  background: var(--uni-module);
+  transform: translateY(0) scale(0.94);
+}
+.jump .unread {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--uni-lamp);
+  color: var(--uni-panel-deep);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  display: none;
+}
+.jump.has-unread .unread { display: block; }
+
+/* ---------- Menus ---------- */
+.menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 6px);
+  background: var(--uni-module);
+  border: 1px solid var(--uni-rule);
+  border-radius: var(--uni-radius);
+  padding: 4px;
+  box-shadow: 0 12px 28px -18px rgba(0, 0, 0, 0.9);
+  z-index: 5;
+}
+.menu .label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 10px 8px;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--uni-dim);
+}
+.menu .label b { color: var(--uni-ink); font-weight: 600; text-transform: none; letter-spacing: 0.02em; }
+.menu .row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: var(--uni-radius);
+  text-align: left;
+}
+.menu .row .name { font-size: 13px; color: var(--uni-ink); }
+.menu .row .desc {
+  font-size: 12px;
+  color: var(--uni-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.menu .row .soon {
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--uni-dim);
+}
+.menu .row[aria-selected="true"] { background: var(--uni-module-hi); }
+.menu .row[aria-disabled="true"] { opacity: 0.5; }
+.menu .none {
+  padding: 10px;
+  font-size: 12.5px;
+  color: var(--uni-dim);
+}
+.menu[hidden] { display: none; }
+
+/* ---------- Icons: drawn, one stroke, currentColor ---------- */
+svg.icon {
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---------- transitions.dev ----------
+   Motion tokens retuned to the Board. The dashboard owns the same grammar in
+   motion.css; the plugin repeats the tokens because it is a separate document. */
+:root {
+  --panel-open-dur: 400ms;
+  --panel-translate-y: 14px;
+  --panel-blur: 2px;
+  --panel-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --stream-gap: 24ms;
+  --stream-fade: 320ms;
+  --stream-blur: 1px;
+  --stream-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --think-swap: 150ms;
+  --think-gap: 50ms;
+  --think-distance: 8px;
+  --think-blur: 2px;
+  --think-shimmer: 1800ms;
+  --think-base: var(--uni-dim);
+  --think-highlight: var(--uni-ink);
+  --think-ease: ease-in-out;
+  --dropdown-open-dur: 250ms;
+  --dropdown-close-dur: 150ms;
+  --dropdown-pre-scale: 0.97;
+  --dropdown-closing-scale: 0.99;
+  --dropdown-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* P07 Panel reveal: every turn enters with a short travel, opacity and a
+   2px cross-blur. The base state is visible — animation only decorates. */
+.turn {
+  opacity: 1;
+  animation: uni-panel-in var(--panel-open-dur) var(--panel-ease);
+}
+@keyframes uni-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--panel-translate-y));
+    filter: blur(var(--panel-blur));
+  }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+/* P30 Streaming text: the agent's words condense into place, not type. */
+.t-stream-w {
+  display: inline;
+  opacity: 1;
+  transition:
+    opacity var(--stream-fade) var(--stream-ease),
+    filter var(--stream-fade) var(--stream-ease);
+}
+.t-stream-w:not(.is-in) {
+  opacity: 0;
+  filter: blur(var(--stream-blur));
+}
+
+/* P28 Thinking states: the busy line shimmers and swaps between narrations. */
+.t-think { position: relative; display: inline-block; }
+.t-think-sizer { display: block; visibility: hidden; white-space: nowrap; }
+.t-think-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: block;
+  color: var(--think-base);
+  white-space: nowrap;
+  transform: translateY(0);
+  filter: blur(0);
+  opacity: 1;
+  transition:
+    transform var(--think-swap) var(--think-ease),
+    filter var(--think-swap) var(--think-ease),
+    opacity var(--think-swap) var(--think-ease);
+}
+.t-think-text::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(90deg,
+    transparent 0%, transparent 40%,
+    var(--think-highlight) 50%,
+    transparent 60%, transparent 100%);
+  background-size: 400% 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: t-think-shimmer var(--think-shimmer) linear infinite;
+}
+@keyframes t-think-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: 0% 0; }
+}
+.t-think-text.is-exit {
+  transform: translateY(calc(var(--think-distance) * -1));
+  filter: blur(var(--think-blur));
+  opacity: 0;
+}
+.t-think-text.is-enter-start {
+  transition: none;
+  transform: translateY(var(--think-distance));
+  filter: blur(var(--think-blur));
+  opacity: 0;
+}
+
+/* P02 Menu dropdown: the prompt menus grow from the bar (origin bottom). */
+.menu {
+  transform-origin: bottom left;
+  transform: scale(var(--dropdown-pre-scale));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform var(--dropdown-open-dur) var(--dropdown-ease),
+    opacity var(--dropdown-open-dur) var(--dropdown-ease);
+  will-change: transform, opacity;
+}
+.menu.is-open {
+  transform: scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+.menu.is-closing {
+  transform: scale(var(--dropdown-closing-scale));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform var(--dropdown-close-dur) var(--dropdown-ease),
+    opacity var(--dropdown-close-dur) var(--dropdown-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+  .turn { animation: none !important; }
+  .t-stream-w { transition: none !important; filter: none !important; opacity: 1 !important; }
+  .t-think-text { transition: none !important; transform: none !important; filter: none !important; }
+  .menu { transition: none !important; }
+}

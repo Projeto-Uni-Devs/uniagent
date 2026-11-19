@@ -1,0 +1,10 @@
+{
+  "id": "agent",
+  "name": "Agent",
+  "version": "0.2.0",
+  "api": 2,
+  "description": "chat with the agent",
+  "entry": "index.html",
+  "icon": "spark",
+  "permissions": ["theme", "storage"]
+}
